@@ -27,7 +27,7 @@ class NeuralNetwork():
 			nPrev = self.nodes[-1]
 
 			# Initializing the weights and biases
-			W = 0.01 * np.random.randn(n, nPrev)
+			W = np.random.randn(n, nPrev)  #Random numbers (Small random numbers do not perform well compared to this)
 			b = np.random.randn(n, 1)
 
 			# Store them as a tuple
