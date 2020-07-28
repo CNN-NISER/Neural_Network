@@ -24,8 +24,12 @@ class NeuralNetwork():
 		return np.maximum(base, inputArray)
 
 	def relu_prime(self, z):
+		
+		y = z
+		y[y > 0] = 1
+		y[y <= 0] = 0
 
-		return 1
+		return y
 
 
 
@@ -54,10 +58,10 @@ class NeuralNetwork():
 			for mini_batch in mini_batches:
 				self.update_mini_batch(mini_batch , learn_rate)
 
-		if test_data:
-			print("Epoch {0}: {1} / {2}".format(i, self.evaluate(test_data), n_test))
-		else:
-				print("Epoch {0} complete".format(i))
+			if test_data:
+				print("Epoch {0}: {1} ".format(i, self.evaluate(test_data)))
+			else:
+					print("Epoch {0} complete".format(i))
 
 
 
