@@ -67,19 +67,26 @@ class NeuralNetwork():
 		return final_output
 
 
-	def getOutput(self):
+	def getLayerOutput(self, n):
 		"""
-		Returns the output of the neural network.
+		Returns the output of the nth layer of the neural network.
+		n = 0 is the input layer
+		0 <= n <= len(self.weights)
 		"""
+		penLayer = len(self.weights) - 1 # The penultimate layer
 		h = self.input
+
 		# Loop through the hidden layers
-		for i in range(len(self.weights) - 1):
+		for i in range(min(n, penLayer)):
 			(W, b) = self.weights[i]
 			h = self.hiddenLayerOutput(h, W, b)
 
 		# Return the output
-		(W, b) = self.weights[-1]
-		return self.finalOutput(h, W, b)
+		if n <= penLayer:
+			return h
+		else:
+			(W, b) = self.weights[n-1]
+			return self.finalOutput(h, W, b)
 
 
 	def dataLoss(self, predResults, trueResults):
@@ -114,22 +121,37 @@ class NeuralNetwork():
 		"""
 		Function to carry out back-propagation algorithm.
 		"""
-		predResults = self.getOutput()
+		predResults = self.getLayerOutput(len(self.weights))
 		# Step 1: Find the gradient at output
 		h = 0.001 * np.ones(predResults.shape)
 		doutput = (self.lossFunc(predResults + h, trueResults) - self.lossFunc(predResults - h, trueResults))/(2*h)
-
-		# Step 2: back propagate
-		dW = np.dot(self.input.T, doutput)
+		
+		# Weights
+		nPrev = len(self.weights) - 1
+		prevLayer = self.getLayerOutput(nPrev)
+		dW = np.dot(prevLayer.T, doutput)
 		db = np.sum(doutput, axis=0, keepdims=True)
-
-		# Parameter update
-		# Works only for linear regressor (no hidden layer)
-		step_size = 0.001
-		(W, b) = self.weights[0]
+		step_size = 1e-5
+		(W, b) = self.weights[nPrev]
 		W += -step_size * dW
 		b += -step_size * db
-		self.weights[0] = (W, b)
+		self.weights[nPrev] = (W, b)
+		# Previous hidden layer
+
+		while nPrev >= 0:
+			nPrev += -1
+			# Backprop into hidden layer
+			dhidden = np.dot(doutput, W.T)
+			# Backprop the ReLU non-linearity
+			dhidden[prevLayer <= 0] = 0
+			(W, b) = self.weights[nPrev]
+			prevLayer = self.getLayerOutput(nPrev)
+			dW = np.dot(prevLayer.T, dhidden)
+			db = np.sum(dhidden, axis=0, keepdims=True)
+			W += -step_size * dW
+			b += -step_size * db
+			self.weights[nPrev] = (W, b)
+			doutput = dhidden
 
 	def train(self, Y, epochs):
 		"""
@@ -143,4 +165,4 @@ class NeuralNetwork():
 		Make predictions.
 		"""
 		self.input = X
-		return self.getOutput()
+		return self.getLayerOutput(len(self.weights))
