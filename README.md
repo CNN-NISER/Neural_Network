@@ -2,8 +2,8 @@
 
 The training data consisted of 0-9, while 10-15 were used for testing.
 
-![Code](code.png)
+![Code](images/code.png)
 
 Result:
 
-![Result](result.png)
+![Result](images/result.png)
