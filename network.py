@@ -1,6 +1,9 @@
 import numpy as np
 import math
 
+# Ensuring reproducibility
+np.random.seed(0)
+
 class NeuralNetwork():
 	
 	def __init__(self):
@@ -9,12 +12,12 @@ class NeuralNetwork():
 		self.weights = []
 
 
-	def inputLayer(self, inputArray):
+	def addInput(self, inputArray):
 		"""
-		Input the first layer.
+		Set the input data.
 		"""
 		self.input = inputArray
-		self.nodes.append(len(inputArray))
+		self.nodes.append(len(inputArray[0]))
 
 
 	def layer(self, n):
@@ -22,23 +25,16 @@ class NeuralNetwork():
 		Creates a new layer.
 		n - the number of nodes in the layer.
 		"""
-		# Check whether this is an inner layer.
-		if self.nodes is not None: 
-			# Number of nodes in previous layer
-			nPrev = self.nodes[-1]
+		# Number of nodes in previous layer
+		nPrev = self.nodes[-1]
 
-			# Initializing the weights and biases
-			W = np.random.randn(n, nPrev) * math.sqrt(2.0/nPrev) # Recommended initialization method
-			b = np.random.randn(n, 1)
+		# Initializing the weights and biases
+		W = np.random.randn(nPrev, n) * math.sqrt(2.0/nPrev) # Recommended initialization method
+		b = np.random.randn(1, n)
 
-			# Store them as a tuple
-			self.nodes.append(n)
-			self.weights.append((W, b))
-
-		# If this is not an inner layer
-		# ask for it first 
-		else:
-			print("Enter an input layer first by calling the inputLayer() method.")
+		# Store them as a tuple
+		self.nodes.append(n)
+		self.weights.append((W, b))
 
 
 	def activFunc(self, inputArray):
@@ -46,8 +42,7 @@ class NeuralNetwork():
 		The activation function for the neurons in the network.
 		"""
 		# ReLU activation
-		base = np.zeros(inputArray.shape)
-		return np.maximum(base, inputArray)
+		return np.maximum(0, inputArray)
 
 
 	def hiddenLayerOutput(self, prevOut, W, b):
@@ -56,7 +51,7 @@ class NeuralNetwork():
 		prevOut - Output from the previous layer (np.array)
 		W, b = Weight and bias of this layer
 		"""
-		layerOutput = np.dot(W, prevOut) + b
+		layerOutput = np.dot(prevOut, W) + b
 		return self.activFunc(layerOutput)
 
 
@@ -66,7 +61,7 @@ class NeuralNetwork():
 		Similar to the hiddenLayerOutput(), but without 
 		the activation function.
 		"""
-		final_output = np.dot(W, prevOut) + b
+		final_output = np.dot(prevOut, W) + b
 		return final_output
 
 
@@ -74,11 +69,9 @@ class NeuralNetwork():
 		"""
 		Returns the output of the neural network.
 		"""
-		(W, b) = self.weights[0]
-		h = self.hiddenLayerOutput(self.input, W, b)
-
+		h = self.input
 		# Loop through the hidden layers
-		for i in range(1, len(self.weights) - 1):
+		for i in range(len(self.weights) - 1):
 			(W, b) = self.weights[i]
 			h = self.hiddenLayerOutput(h, W, b)
 
