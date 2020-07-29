@@ -12,7 +12,6 @@ test = test.reshape(len(test), 1)
 
 # Create instance of NeuralNetwork
 model = NeuralNetwork()
-# Linear classifier (no hidden layers)
 model.addInput(x)
 model.layer(4)
 model.layer(8)
