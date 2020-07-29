@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class NeuralNetwork():
 	
@@ -27,7 +28,7 @@ class NeuralNetwork():
 			nPrev = self.nodes[-1]
 
 			# Initializing the weights and biases
-			W = np.random.randn(n, nPrev)  #Random numbers (Small random numbers do not perform well compared to this)
+			W = np.random.randn(n, nPrev) * math.sqrt(2.0/nPrev) # Recommended initialization method
 			b = np.random.randn(n, 1)
 
 			# Store them as a tuple
