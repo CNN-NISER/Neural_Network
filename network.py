@@ -124,7 +124,7 @@ class NeuralNetwork():
 		db = np.sum(doutput, axis=0, keepdims=True)
 
 		# Parameter update
-		# Works only for linear classifier (no hidden layer)
+		# Works only for linear regressor (no hidden layer)
 		step_size = 0.001
 		(W, b) = self.weights[0]
 		W += -step_size * dW
