@@ -2,15 +2,23 @@ import numpy as np
 
 from network import NeuralNetwork
 
-# Input data
-x = np.random.randn(3, 1) # Random input vector of three numbers (3x1)
+# Training data (0 to 9)
+x = np.arange(10).reshape(10, 1)
+y = 2 * x
+
+# Test data (10 to 15)
+test = np.arange(10, 16)
+test = test.reshape(len(test), 1)
 
 # Create instance of NeuralNetwork
 model = NeuralNetwork()
+# Linear classifier (no hidden layers)
+model.addInput(x)
+model.layer(1)
 
-model.inputLayer(x)
-model.layer(4)
-model.layer(5)
-model.layer(2)
+model.train(y, 200)
 
-print(model.getOutput())
+result = model.predict(test)
+
+for i in range(len(result)):
+    print(f"{test[i]} * 2 = {result[i]}")

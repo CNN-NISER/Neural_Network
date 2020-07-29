@@ -10,6 +10,8 @@ class NeuralNetwork():
 		self.input = None
 		self.nodes = []
 		self.weights = []
+		# Regularization strengh
+		self.regLossParam = 1e-3
 
 
 	def addInput(self, inputArray):
@@ -30,7 +32,7 @@ class NeuralNetwork():
 
 		# Initializing the weights and biases
 		W = np.random.randn(nPrev, n) * math.sqrt(2.0/nPrev) # Recommended initialization method
-		b = np.random.randn(1, n)
+		b = np.zeros((1, n))
 
 		# Store them as a tuple
 		self.nodes.append(n)
@@ -78,3 +80,67 @@ class NeuralNetwork():
 		# Return the output
 		(W, b) = self.weights[-1]
 		return self.finalOutput(h, W, b)
+
+
+	def dataLoss(self, predResults, trueResults):
+		"""
+		The data loss function.
+		"""
+		# L2 loss
+		loss = np.square(trueResults - predResults)
+		return loss/len(trueResults)
+
+
+	def regLoss(self):
+		"""
+		The regularization loss function.
+		"""
+		if self.regLossParam == 0:
+			return 0
+		else:
+			squaredTotal = 0
+			for (W, _) in self.weights:
+				squaredTotal += np.sum(np.square(W))
+
+			loss = 0.5 * self.regLossParam * squaredTotal
+			return loss
+
+
+	def lossFunc(self, predResults, trueResults):
+		return (self.dataLoss(predResults, trueResults) + self.regLoss())
+
+
+	def backPropagation(self, trueResults):
+		"""
+		Function to carry out back-propagation algorithm.
+		"""
+		predResults = self.getOutput()
+		# Step 1: Find the gradient at output
+		h = 0.001 * np.ones(predResults.shape)
+		doutput = (self.lossFunc(predResults + h, trueResults) - self.lossFunc(predResults - h, trueResults))/(2*h)
+
+		# Step 2: back propagate
+		dW = np.dot(self.input.T, doutput)
+		db = np.sum(doutput, axis=0, keepdims=True)
+
+		# Parameter update
+		# Works only for linear classifier (no hidden layer)
+		step_size = 0.001
+		(W, b) = self.weights[0]
+		W += -step_size * dW
+		b += -step_size * db
+		self.weights[0] = (W, b)
+
+	def train(self, Y, epochs):
+		"""
+		Train the neural network.
+		"""
+		for i in range(epochs):
+			self.backPropagation(Y)
+
+	def predict(self, X):
+		"""
+		Make predictions.
+		"""
+		self.input = X
+		return self.getOutput()
