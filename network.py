@@ -1,49 +1,42 @@
 import numpy as np
+import math
+
+# Ensuring reproducibility
+np.random.seed(0)
 
 class NeuralNetwork():
 	
-	#	def __init__(self):
-	#	self.input = None
-	#	self.nodes = []
-	#	self.weights = []
-
-
-	#def inputLayer(self, inputArray):
-	#	"""
-	#	Input the first layer.
-	#	"""
-	#	self.input = inputArray
-
 	def __init__(self):
-		a=[0]  #Sample
+		self.input = None
 		self.nodes = []
 		self.weights = []
-		self.nodes.append(len(a))
-		self.input = []
-		self.input.append(a[0])
+		# Regularization strengh
+		self.regLossParam = 1e-3
+
+
+	def addInput(self, inputArray):
+		"""
+		Set the input data.
+		"""
+		self.input = inputArray
+		self.nodes.append(len(inputArray[0]))
+
 
 	def layer(self, n):
 		"""
 		Creates a new layer.
 		n - the number of nodes in the layer.
 		"""
-		# Check whether this is an inner layer.
-		if self.nodes is not None: 
-			# Number of nodes in previous layer
-			nPrev = self.nodes[-1]
+		# Number of nodes in previous layer
+		nPrev = self.nodes[-1]
 
-			# Initializing the weights and biases
-			W = np.random.randn(n, nPrev)  #Random numbers (Small random numbers do not perform well compared to this)
-			b = np.zeros([n,1])  #In the future when memory and arithmetic time becomes an issue, use bias trick
+		# Initializing the weights and biases
+		W = np.random.randn(nPrev, n) * math.sqrt(2.0/nPrev) # Recommended initialization method
+		b = np.zeros((1, n))
 
-			# Store them as a tuple
-			self.nodes.append(n)
-			self.weights.append((W, b))
-
-		# If this is not an inner layer
-		# ask for it first 
-		else:
-			print("Enter an input layer first by calling the inputLayer() method.")
+		# Store them as a tuple
+		self.nodes.append(n)
+		self.weights.append((W, b))
 
 
 	def activFunc(self, inputArray):
@@ -51,8 +44,7 @@ class NeuralNetwork():
 		The activation function for the neurons in the network.
 		"""
 		# ReLU activation
-		base = np.zeros(inputArray.shape)
-		return np.maximum(base, inputArray)
+		return np.maximum(0, inputArray)
 
 
 	def hiddenLayerOutput(self, prevOut, W, b):
@@ -61,7 +53,7 @@ class NeuralNetwork():
 		prevOut - Output from the previous layer (np.array)
 		W, b = Weight and bias of this layer
 		"""
-		layerOutput = np.dot(W, prevOut) + b
+		layerOutput = np.dot(prevOut, W) + b
 		return self.activFunc(layerOutput)
 
 
@@ -71,61 +63,106 @@ class NeuralNetwork():
 		Similar to the hiddenLayerOutput(), but without 
 		the activation function.
 		"""
-		final_output = np.dot(W, prevOut) + b
+		final_output = np.dot(prevOut, W) + b
 		return final_output
 
 
-	def getOutput(self, inp):
+	def getLayerOutput(self, n):
 		"""
-		Returns the output of the neural network.
+		Returns the output of the nth layer of the neural network.
+		n = 0 is the input layer
+		0 <= n <= len(self.weights)
 		"""
-		output = []
-		for i in range(0,len(inp)):
-			self.input = np.array(inp[i])
-			(W, b) = self.weights[0]
-			h = self.hiddenLayerOutput(self.input, W, b)
-			# Loop through the hidden layers
-			for i in range(1, len(self.weights) - 1):
-				(W, b) = self.weights[i]
-				h = self.hiddenLayerOutput(h, W, b)
-				# Return the output
-				(W, b) = self.weights[-1]
-				output.append(self.finalOutput(h, W, b))
-		return output
+		penLayer = len(self.weights) - 1 # The penultimate layer
+		h = self.input
 
-	def Loss(self, y1, y2):
-		l2=0
-		for i in range(0,len(y1)):
-			l2 += y2[i] - y1[i]
-		l2 = l2/len(y1)
-		return l2
+		# Loop through the hidden layers
+		for i in range(min(n, penLayer)):
+			(W, b) = self.weights[i]
+			h = self.hiddenLayerOutput(h, W, b)
+
+		# Return the output
+		if n <= penLayer:
+			return h
+		else:
+			(W, b) = self.weights[n-1]
+			return self.finalOutput(h, W, b)
+
+
+	def dataLoss(self, predResults, trueResults):
+		"""
+		Returns the data loss.
+		"""
+		# L2 loss
+		loss = np.square(trueResults - predResults)
+		return loss/len(trueResults)
+
+
+	def regLoss(self):
+		"""
+		Returns the regularization loss.
+		"""
+		if self.regLossParam == 0:
+			return 0
+		else:
+			squaredTotal = 0
+			for (W, _) in self.weights:
+				squaredTotal += np.sum(np.square(W))
+
+			loss = 0.5 * self.regLossParam * squaredTotal
+			return loss
+
+
+	def lossFunc(self, predResults, trueResults):
+		return (self.dataLoss(predResults, trueResults) + self.regLoss())
+
+
+	def backPropagation(self, trueResults):
+		"""
+		Updates weights by carrying out backpropagation.
+		"""
+		predResults = self.getLayerOutput(len(self.weights))
+		# Step 1: Find the gradient at output
+		h = 0.001 * np.ones(predResults.shape)
+		step_size = 1e-5
+
+		doutput = (self.lossFunc(predResults + h, trueResults) - self.lossFunc(predResults - h, trueResults))/(2*h)
 		
+		# Weights
+		nPrev = len(self.weights)
 
-	def training(self, inputData, expValue, epoch, learn, delta):
-		for i in range(0, epoch):
-			#print('Epoch number: ',i)
-			if(i%10 == 0):
-				learn=learn/2
-				#print('Learning rate updated to: ', learn)
-			"""Update w for diff, then find derivative, then subtract dW"""
-			for j in range(len(self.weights)):
-				l1 = self.Loss(self.getOutput(inputData), expValue)
-				#print(l1)
-				(W,b) = self.weights[j]
-				numrows = len(W)
-				numcols = len(W[0])
-				for k in range(numrows):
-					for l in range(numcols):
-						W[k][l] += delta
-						self.weights[j] = (W,b)
-						l2 = self.Loss(self.getOutput(inputData), expValue)
-						m = (l2 - l1)/delta
-						#dw = (m*W[k][l] - l2)/m
-						if m!=0:
-							W[k][l] -= m*learn
-						W[k][l] -= delta
-						self.weights[j] = (W,b)
-		print('Training process complete.')
+		while nPrev - 1 >= 0:
 
+			if nPrev != len(self.weights):
+				# Backprop into hidden layer
+				dhidden = np.dot(doutput, W.T)
+				# Backprop the ReLU non-linearity
+				dhidden[prevLayer <= 0] = 0
+			else:
+				dhidden = doutput
 
+			nPrev += -1
 
+			prevLayer = self.getLayerOutput(nPrev)
+			dW = np.dot(prevLayer.T, dhidden)
+			db = np.sum(dhidden, axis=0, keepdims=True)
+			(W, b) = self.weights[nPrev]
+			W += -step_size * dW
+			b += -step_size * db
+			self.weights[nPrev] = (W, b)
+
+			doutput = dhidden
+
+	def train(self, Y, epochs):
+		"""
+		Train the neural network.
+		"""
+		for i in range(epochs):
+			self.backPropagation(Y)
+
+	def predict(self, X):
+		"""
+		Make predictions.
+		"""
+		self.input = X
+		return self.getLayerOutput(len(self.weights))

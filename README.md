@@ -1,3 +1,9 @@
 # Neural_Network
 
-An implemention of a neural network which learns the multiplication by 3.
+The training data consisted of 0-9, while 10-15 were used for testing.
+
+![Code](images/code.png)
+
+Result:
+
+![Result](images/result.png)
