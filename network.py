@@ -161,6 +161,7 @@ class NeuralNetwork():
 
 			doutput = dhidden # Move to the previous layer
 
+			
 	def train(self, Y, epochs):
 		"""
 		Train the neural network.
@@ -170,6 +171,7 @@ class NeuralNetwork():
 		# Run backPropagation() 'epochs' number of times.
 		for i in range(epochs):
 			self.backPropagation(Y)
+
 
 	def predict(self, X):
 		"""
