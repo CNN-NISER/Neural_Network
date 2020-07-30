@@ -122,7 +122,7 @@ class NeuralNetwork():
 		Updates weights by carrying out backpropagation.
 		"""
 		predResults = self.getLayerOutput(len(self.weights))
-		# Step 1: Find the gradient at output
+		
 		h = 0.001 * np.ones(predResults.shape)
 		step_size = 1e-5
 
