@@ -116,10 +116,6 @@ class NeuralNetwork():
 			return loss
 
 
-	def lossFunc(self, predResults, trueResults):
-		return (self.dataLoss(predResults, trueResults) + self.regLoss())
-
-
 	def backPropagation(self, trueResults):
 		"""
 		Updates weights by carrying out backpropagation.
@@ -132,7 +128,7 @@ class NeuralNetwork():
 		learningRate = 1e-5
 
 		# The derivative of the loss function with respect to the output:
-		doutput = (self.lossFunc(predResults + h, trueResults) - self.lossFunc(predResults - h, trueResults))/(2*h)
+		doutput = (self.dataLoss(predResults + h, trueResults) - self.dataLoss(predResults - h, trueResults))/(2*h)
 		
 		nPrev = len(self.weights) # Index keeping track of the previous layer
 
@@ -152,11 +148,13 @@ class NeuralNetwork():
 			prevLayer = self.getLayerOutput(nPrev) # The output of the previous layer
 			
 			# Find the gradients of the weights and biases
+			(W, b) = self.weights[nPrev]
 			dW = np.dot(prevLayer.T, dhidden)
 			db = np.sum(dhidden, axis=0, keepdims=True)
+
+			dW += self.regLossParam * W # Regularization gradient
 			
 			# Update the weights and biases
-			(W, b) = self.weights[nPrev]
 			W += -learningRate * dW
 			b += -learningRate * db
 			self.weights[nPrev] = (W, b)
