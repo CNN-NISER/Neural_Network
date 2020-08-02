@@ -15,6 +15,6 @@ This repository contains code for a neural network (without the use of any packa
 
 We initialised the weights by random numbers normalised by the number of nodes in the previous layer. Biases are initialised to 0. 
 
-We use the Rectified Linear Unit for the activation function and a simple L1 norm loss with weight regularisation as our loss function, which in itself, gives pretty good results.
+We use the Rectified Linear Unit for the activation function and a simple L2 norm loss with weight regularisation as our loss function, which in itself, gives pretty good results. Since we use numerical differentiation, the L2 loss that was used can be switched to any other loss function.
 
-Further optimisation, hyper-parameter optimisation and generalisation (for activation and loss functions) will be done along the way.
+Further optimisation, hyper-parameter optimisation and generalisation (for different activation functions) will be done along the way.
